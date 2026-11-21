@@ -95,6 +95,7 @@ jobs:
         shell: bash
         run: |
           gh release create "${{ steps.build.outputs.tag }}" \
+            --repo "${GITHUB_REPOSITORY}" \
             "patches/build/libs/${{ steps.build.outputs.asset }}" \
             --title "Piko Productivity ${{ steps.build.outputs.version }}" \
             --notes "Automated productivity build based on Piko ${{ steps.build.outputs.version }}."
