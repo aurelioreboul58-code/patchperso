@@ -23,6 +23,7 @@ import app.morphe.extension.twitter.settings.widgets.*;
 import androidx.annotation.Nullable;
 
 import app.morphe.extension.twitter.Pref;
+import app.morphe.extension.twitter.patches.ForYouFeedControl;
 
 
 public class ScreenBuilder {
@@ -568,6 +569,20 @@ public class ScreenBuilder {
         LegacyTwitterPreferenceCategory category = null;
         if(buildCategory)
             category = preferenceCategory(str("piko_title_misc"));
+        if (SettingsStatus.productivityFeedControl) {
+            Preference feedLimit = helper.switchPreference(
+                    str("piko_pref_productivity_feed_limit"),
+                    str("piko_pref_productivity_feed_limit_desc"),
+                    Settings.PRODUCTIVITY_FEED_LIMIT
+            );
+            feedLimit.setOnPreferenceChangeListener((preference, newValue) -> {
+                if (!Boolean.TRUE.equals(newValue)) return false;
+                ForYouFeedControl.activate();
+                return true;
+            });
+            feedLimit.setEnabled(!ForYouFeedControl.isLocked());
+            addPreference(category, feedLimit);
+        }
         if (SettingsStatus.blockUpdateScreen) {
             addPreference(category,
                     helper.switchPreference(

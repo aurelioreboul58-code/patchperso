@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="piko_pref_productivity_feed_limit">Limit the For You feed</string>
+    <string name="piko_pref_productivity_feed_limit_desc">Three 10-minute sessions each day at 06:00, 12:00 and 18:00. Once enabled, it cannot be turned off in X or Piko settings; uninstalling X removes the lock.</string>
     <!-- Settings Search -->
     <string name="piko_settings_search_hint">Search Piko settings</string>
     <string name="piko_settings_search_clear">Clear input</string>

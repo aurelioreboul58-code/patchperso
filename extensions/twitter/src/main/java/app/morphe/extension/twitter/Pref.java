@@ -15,6 +15,7 @@ import android.view.ViewGroup;
 import app.morphe.extension.shared.ResourceUtils;
 import app.morphe.extension.twitter.settings.Settings;
 import app.morphe.extension.twitter.settings.SettingsStatus;
+import app.morphe.extension.twitter.patches.ForYouFeedControl;
 
 import com.google.android.material.tabs.TabLayout$g;
 import java.util.*;
@@ -372,7 +373,17 @@ public class Pref {
     }
 
     public static boolean hideDetailedPosts() {
-        return Utils.getBooleanPref(Settings.ADS_HIDE_DETAILED_POSTS);
+        return productivityFeedLimitEnabled() || Utils.getBooleanPref(Settings.ADS_HIDE_DETAILED_POSTS);
+    }
+
+    public static boolean productivityFeedLimitEnabled() {
+        boolean locked = Utils.getBooleanPref(Settings.PRODUCTIVITY_FEED_LIMIT_LOCKED);
+        boolean enabled = Utils.getBooleanPref(Settings.PRODUCTIVITY_FEED_LIMIT);
+        if (enabled && !locked) {
+            ForYouFeedControl.activate();
+            return true;
+        }
+        return locked || enabled;
     }
 
     public static boolean hidePremiumPrompt() {

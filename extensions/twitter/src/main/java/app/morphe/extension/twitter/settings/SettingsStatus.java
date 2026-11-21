@@ -33,6 +33,7 @@ public class SettingsStatus {
     public static boolean roundOffNumbers = false;
     public static boolean enableDebugMenu = false;
     public static boolean legacyShareLink = false;
+    public static boolean productivityFeedControl = false;
 
     public static boolean hideAds = false;
     public static boolean hideGAds = false;
@@ -414,7 +415,11 @@ public class SettingsStatus {
     }
 
     public static boolean enableMiscSection() {
-        return ( pauseSearchSuggestions || removeSearchSuggestions || hideSocialProof || roundOffNumbers || enableFontMod || hideRecommendedUsers || hideFAB || hideViewCount || customSharingDomainEnabled || hideFABBtns);
+        return ( productivityFeedControl || pauseSearchSuggestions || removeSearchSuggestions || hideSocialProof || roundOffNumbers || enableFontMod || hideRecommendedUsers || hideFAB || hideViewCount || customSharingDomainEnabled || hideFABBtns);
+    }
+
+    public static void productivityFeedControl() {
+        productivityFeedControl = true;
     }
 
     public static boolean enableAdsSection() {

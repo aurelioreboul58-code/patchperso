@@ -2,12 +2,12 @@ group = "crimera"
 
 patches {
     about {
-        name = "Piko"
-        description = "Morphe patches focused on Twitter/X"
-        source = "git@github.com:crimera/piko.git"
-        author = "crimera"
+        name = "Piko Productivity"
+        description = "Piko patches for Twitter/X with a finite For You feed"
+        source = "https://github.com/aurelioreboul58-code/patchperso"
+        author = "aurelioreboul58-code"
         contact = "na"
-        website = "https://github.com/crimera/piko"
+        website = "https://github.com/aurelioreboul58-code/patchperso"
         license = "GNU General Public License v3.0"
     }
 }
@@ -34,7 +34,9 @@ tasks {
     register<JavaExec>("generatePatchesList") {
         description = "Build patch with patch list"
 
-        dependsOn(build)
+        // The Android build converts patch classes to DEX. Morphe Manager only loads
+        // patch bundles that carry those DEX entries.
+        dependsOn(buildAndroid)
 
         classpath = sourceSets["main"].runtimeClasspath
         mainClass.set("app.morphe.util.PatchListGeneratorKt")

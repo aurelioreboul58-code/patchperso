@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="piko_pref_productivity_feed_limit">Limiter le fil « Pour vous »</string>
+    <string name="piko_pref_productivity_feed_limit_desc">Trois sessions de 10 minutes par jour, à 6 h, 12 h et 18 h. Une fois activée, elle ne peut pas être désactivée dans X ou Piko ; désinstaller X supprime le verrou.</string>
     <!-- Settings Search -->
     <string name="piko_settings_search_hint">Rechercher des paramètres de Piko</string>
     <string name="piko_settings_search_clear">Effacer la saisie</string>

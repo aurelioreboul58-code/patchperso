@@ -9,6 +9,9 @@ on:
 jobs:
   release:
     name: Release
+    # This upstream release process needs Piko's private signing credentials.
+    # Personal releases are published by sync-productivity.yml instead.
+    if: vars.ENABLE_UPSTREAM_RELEASE == 'true'
     permissions:
       contents: write
       packages: write

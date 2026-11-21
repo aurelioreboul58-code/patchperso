@@ -56,7 +56,8 @@ public class TimelineEntry {
             if (entryId.contains("rtb") && hideAds) {
                 return true;
             }
-            if (entryId2.startsWith("tweetdetail") && hideDetailedPosts) {
+            if (entryId2.startsWith("tweetdetail") &&
+                    (hideDetailedPosts || (SettingsStatus.hideDetailedPosts && Pref.productivityFeedLimitEnabled()))) {
                 return true;
             }
             if (entryId2.equals("bookmarked") && hideRBMK) {

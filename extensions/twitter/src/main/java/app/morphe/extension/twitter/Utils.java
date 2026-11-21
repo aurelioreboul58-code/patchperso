@@ -104,6 +104,26 @@ public class Utils {
 
     public static Boolean setBooleanPref(String key, Boolean val) {
         try {
+            if (Settings.PRODUCTIVITY_FEED_WINDOW_KEY.equals(key)
+                    || Settings.PRODUCTIVITY_FEED_USED_MS_KEY.equals(key)
+                    || Settings.PRODUCTIVITY_FEED_REFRESHED_WINDOW_KEY.equals(key)) return false;
+            boolean locked = sp.getBoolean(Settings.PRODUCTIVITY_FEED_LIMIT_LOCKED.key, false);
+            if (Settings.PRODUCTIVITY_FEED_LIMIT_LOCKED.key.equals(key)) {
+                if (locked && !Boolean.TRUE.equals(val)) return false;
+                if (Boolean.TRUE.equals(val)) {
+                    sp.saveBoolean(Settings.PRODUCTIVITY_FEED_LIMIT.key, true);
+                    sp.saveBoolean(Settings.PRODUCTIVITY_FEED_LIMIT_LOCKED.key, true);
+                    return true;
+                }
+            }
+            if (Settings.PRODUCTIVITY_FEED_LIMIT.key.equals(key)) {
+                if (locked && !Boolean.TRUE.equals(val)) return false;
+                if (Boolean.TRUE.equals(val)) {
+                    sp.saveBoolean(Settings.PRODUCTIVITY_FEED_LIMIT.key, true);
+                    sp.saveBoolean(Settings.PRODUCTIVITY_FEED_LIMIT_LOCKED.key, true);
+                    return true;
+                }
+            }
             sp.saveBoolean(key, val);
             return true;
         } catch (Exception ex) {
@@ -114,6 +134,9 @@ public class Utils {
 
     public static Boolean setStringPref(String key, String val) {
         try {
+            if (Settings.PRODUCTIVITY_FEED_WINDOW_KEY.equals(key)
+                    || Settings.PRODUCTIVITY_FEED_USED_MS_KEY.equals(key)
+                    || Settings.PRODUCTIVITY_FEED_REFRESHED_WINDOW_KEY.equals(key)) return false;
             sp.saveString(key, val);
             return true;
         } catch (Exception ex) {
@@ -161,7 +184,22 @@ public class Utils {
                 sp.removeKey(Settings.MISC_FEATURE_FLAGS.key);
                 success = true;
             } else {
+                boolean productivityLocked = sp.getBoolean(Settings.PRODUCTIVITY_FEED_LIMIT_LOCKED.key, false)
+                        || sp.getBoolean(Settings.PRODUCTIVITY_FEED_LIMIT.key, false);
+                String productivityWindow = sp.preferences.getString(Settings.PRODUCTIVITY_FEED_WINDOW_KEY, null);
+                long productivityUsedMs = sp.preferences.getLong(Settings.PRODUCTIVITY_FEED_USED_MS_KEY, 0L);
+                boolean hasProductivityUsedMs = sp.preferences.contains(Settings.PRODUCTIVITY_FEED_USED_MS_KEY);
+                String productivityRefreshedWindow = sp.preferences.getString(Settings.PRODUCTIVITY_FEED_REFRESHED_WINDOW_KEY, null);
                 success = sp.clearAll();
+                if (success && productivityLocked) {
+                    android.content.SharedPreferences.Editor editor = sp.preferences.edit()
+                            .putBoolean(Settings.PRODUCTIVITY_FEED_LIMIT.key, true)
+                            .putBoolean(Settings.PRODUCTIVITY_FEED_LIMIT_LOCKED.key, true);
+                    if (productivityWindow != null) editor.putString(Settings.PRODUCTIVITY_FEED_WINDOW_KEY, productivityWindow);
+                    if (hasProductivityUsedMs) editor.putLong(Settings.PRODUCTIVITY_FEED_USED_MS_KEY, productivityUsedMs);
+                    if (productivityRefreshedWindow != null) editor.putString(Settings.PRODUCTIVITY_FEED_REFRESHED_WINDOW_KEY, productivityRefreshedWindow);
+                    success = editor.commit();
+                }
             }
             if (success) {
                 app.morphe.extension.shared.Utils.restartApp(context);
@@ -178,6 +216,9 @@ public class Utils {
     public static String getAll(boolean no_flags) {
         JSONObject prefs = sp.getAll();
         prefs.remove(Settings.LAST_CHANGELOG.key);
+        prefs.remove(Settings.PRODUCTIVITY_FEED_WINDOW_KEY);
+        prefs.remove(Settings.PRODUCTIVITY_FEED_USED_MS_KEY);
+        prefs.remove(Settings.PRODUCTIVITY_FEED_REFRESHED_WINDOW_KEY);
         if (no_flags) {
             prefs.remove(Settings.MISC_FEATURE_FLAGS.key);
             prefs.remove(Settings.MISC_FEATURE_FLAGS_SEARCH.key);

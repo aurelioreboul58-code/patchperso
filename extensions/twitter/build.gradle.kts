@@ -10,4 +10,5 @@ dependencies {
     compileOnly(libs.morphe.extensions.library)
     compileOnly(libs.annotation)
     compileOnly(libs.appcompat)
+    compileOnly(libs.recyclerview)
 }

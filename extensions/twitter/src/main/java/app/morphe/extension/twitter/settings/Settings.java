@@ -16,6 +16,12 @@ public class Settings {
 
     public static final BooleanSetting PIKO_DEBUG = new BooleanSetting("piko_debug", false);
 
+    public static final BooleanSetting PRODUCTIVITY_FEED_LIMIT = new BooleanSetting("productivity_feed_limit", false);
+    public static final BooleanSetting PRODUCTIVITY_FEED_LIMIT_LOCKED = new BooleanSetting("productivity_feed_limit_locked", false);
+    public static final String PRODUCTIVITY_FEED_WINDOW_KEY = "productivity_feed_window";
+    public static final String PRODUCTIVITY_FEED_USED_MS_KEY = "productivity_feed_used_ms";
+    public static final String PRODUCTIVITY_FEED_REFRESHED_WINDOW_KEY = "productivity_feed_refreshed_window";
+
     public static final StringSetting VID_PUBLIC_FOLDER = new StringSetting("vid_public_folder", "Movies");
     public static final StringSetting VID_SUBFOLDER = new StringSetting("vid_subfolder", "Twitter");
     public static final StringSetting VID_MEDIA_HANDLE = new StringSetting("vid_media_handle", "download_media");

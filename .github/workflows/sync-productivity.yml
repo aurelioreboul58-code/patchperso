@@ -1,0 +1,125 @@
+name: Sync and publish Piko Productivity
+
+on:
+  workflow_dispatch:
+  schedule:
+    # GitHub schedules are best-effort. This checks four times per day and
+    # only builds when upstream Piko has actually changed.
+    - cron: "17 */6 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: piko-productivity-sync
+  cancel-in-progress: false
+
+jobs:
+  sync-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the personal fork
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Check for an upstream Piko update
+        id: upstream
+        shell: bash
+        run: |
+          git remote add upstream https://github.com/crimera/piko.git 2>/dev/null || true
+          git fetch --no-tags upstream main
+
+          if git log --format=oneline HEAD..upstream/main | grep -q .; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Reapply the productivity changes to Piko
+        if: steps.upstream.outputs.changed == 'true'
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # A conflict intentionally stops the workflow. It leaves the
+          # already published, working source untouched until it is resolved.
+          git rebase upstream/main
+          git push --force-with-lease origin HEAD:main
+
+      - name: Set up Java
+        if: steps.upstream.outputs.changed == 'true' || github.event_name == 'workflow_dispatch'
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Cache Gradle
+        if: steps.upstream.outputs.changed == 'true' || github.event_name == 'workflow_dispatch'
+        uses: burrunan/gradle-cache-action@v3
+
+      - name: Build the custom patch bundle
+        if: steps.upstream.outputs.changed == 'true' || github.event_name == 'workflow_dispatch'
+        id: build
+        env:
+          # This is a repository Actions secret, never a value committed here.
+          GITHUB_TOKEN: ${{ secrets.MORPHE_REGISTRY_TOKEN }}
+          GITHUB_ACTOR: ${{ github.actor }}
+        shell: bash
+        run: |
+          base_version="$(sed -n 's/^version = //p' gradle.properties)"
+          if [[ -z "$base_version" || "$base_version" == *-productivity.* ]]; then
+            echo "The source version must be an upstream Piko version." >&2
+            exit 1
+          fi
+
+          patch_version="${base_version}-productivity.${GITHUB_RUN_NUMBER}"
+          asset="patches-${patch_version}.mpp"
+          tag="productivity-v${patch_version}"
+
+          # `clean` makes the version override observable in the file name even
+          # when an Actions cache restored outputs from a previous release.
+          ./gradlew --no-daemon --console=plain clean :patches:generatePatchesList -Pversion="$patch_version"
+          test -f "patches/build/libs/${asset}"
+
+          echo "version=$patch_version" >> "$GITHUB_OUTPUT"
+          echo "asset=$asset" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Publish the patch bundle
+        if: steps.upstream.outputs.changed == 'true' || github.event_name == 'workflow_dispatch'
+        env:
+          # Keep the repository write token separate from the package-read token.
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          gh release create "${{ steps.build.outputs.tag }}" \
+            "patches/build/libs/${{ steps.build.outputs.asset }}" \
+            --title "Piko Productivity ${{ steps.build.outputs.version }}" \
+            --notes "Automated productivity build based on Piko ${{ steps.build.outputs.version }}."
+
+      - name: Publish metadata for Morphe
+        if: steps.upstream.outputs.changed == 'true' || github.event_name == 'workflow_dispatch'
+        env:
+          PATCH_VERSION: ${{ steps.build.outputs.version }}
+          PATCH_ASSET: ${{ steps.build.outputs.asset }}
+          PATCH_TAG: ${{ steps.build.outputs.tag }}
+        shell: bash
+        run: |
+          download_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/releases/download/${PATCH_TAG}/${PATCH_ASSET}"
+          created_at="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+
+          jq -n \
+            --arg created_at "$created_at" \
+            --arg description "Automated Piko Productivity build based on Piko ${PATCH_VERSION%%-productivity.*}." \
+            --arg download_url "$download_url" \
+            --arg version "$PATCH_VERSION" \
+            '{created_at: $created_at, description: $description, download_url: $download_url, signature_download_url: "", version: $version}' \
+            > patches-bundle.json
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add patches-bundle.json patches-list.json
+          git commit -m "chore: publish Piko Productivity ${PATCH_VERSION} [skip ci]"
+          git push origin HEAD:main
