@@ -109,7 +109,9 @@ jobs:
         shell: bash
         run: |
           download_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/releases/download/${PATCH_TAG}/${PATCH_ASSET}"
-          created_at="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+          # Morphe reads this as a UTC LocalDateTime, so it must not carry a
+          # trailing timezone suffix such as `Z`.
+          created_at="$(date -u +"%Y-%m-%dT%H:%M:%S")"
 
           jq -n \
             --arg created_at "$created_at" \
